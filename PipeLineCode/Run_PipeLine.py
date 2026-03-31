@@ -15,7 +15,8 @@ except ImportError as e:
           "and OutPutVideoGenerater.py are in the folder.")
     exit(1)
 
-def run_pipeline(vid1_path, vid2_path, calibration_mat, model_path, output_root):
+def run_pipeline(vid1_path, vid2_path, calibration_mat, model_path, output_root, 
+                 correct_refraction=False, d_air=0.0, d_glass=0.0):
     """
     Executes the comprehensive 3D fish tracking framework.
     
@@ -74,7 +75,10 @@ def run_pipeline(vid1_path, vid2_path, calibration_mat, model_path, output_root)
             str(raw_track_1), 
             str(raw_track_2), 
             str(calibration_mat),
-            n_water=1.333
+            n_water=1.333,
+            correct_refraction=correct_refraction,
+            d_air=d_air,
+            d_glass=d_glass
         )
         
         # 2. Apply Mapping and Renaming
@@ -101,7 +105,10 @@ def run_pipeline(vid1_path, vid2_path, calibration_mat, model_path, output_root)
             str(mapped_track_1), 
             str(mapped_track_2), 
             str(calibration_mat),
-            n_water=1.333
+            n_water=1.333,
+            correct_refraction=correct_refraction,
+            d_air=d_air,
+            d_glass=d_glass
         )
         
         if not df_3d.empty:
@@ -146,9 +153,18 @@ if __name__ == "__main__":
     parser.add_argument("--model", default="yolov8n.pt", help="Path to YOLO weights")
     
     # Output
-    parser.add_argument("--output", default="./results", help="Root directory for outputs")
+    
+    # Refraction Options
+    parser.add_argument("--correct_refraction", action="store_true", help="Enable refraction correction (if system calibrated in air)")
+    parser.add_argument("--d_air", type=float, default=0.0, help="Distance from camera origin to glass (mm)")
+    parser.add_argument("--d_glass", type=float, default=0.0, help="Thickness of the glass port (mm)")
 
     args = parser.parse_args()
     
     # Run
-    run_pipeline(args.vid1, args.vid2, args.calib, args.model, args.output)
+    run_pipeline(
+        args.vid1, args.vid2, args.calib, args.model, args.output,
+        correct_refraction=args.correct_refraction,
+        d_air=args.d_air,
+        d_glass=args.d_glass
+    )
