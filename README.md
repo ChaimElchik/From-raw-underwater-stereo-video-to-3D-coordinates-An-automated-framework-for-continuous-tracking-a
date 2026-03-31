@@ -1,6 +1,6 @@
 # 3D Fish Tracking & Re-ID Pipeline
 
-A robust, high-precision 3D tracking framework designed to analyze fish behavior in stereo underwater video datasets. This pipeline integrates object detection, multi-object tracking, visual Re-Identification (Re-ID) using Vision Transformers, Refractive Stereo Matching, and 3D Kinematic Analysis into an automated workflow.
+A robust, high-precision 3D tracking framework designed to analyze fish movement in stereo underwater video datasets. This pipeline integrates object detection, multi-object tracking, visual Re-Identification (Re-ID) using Vision Transformers, Refractive Stereo Matching, and 3D Triangulation into an automated workflow.
 
 ## Features
 
