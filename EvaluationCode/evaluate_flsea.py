@@ -6,7 +6,14 @@ import argparse
 from pathlib import Path
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
-from ThreeDCordinate_Maker import refract_points, triangulate_rays
+import sys
+import os
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'PipeLine'))
+try:
+    from ThreeDCordinate_Maker import refract_points, triangulate_rays
+except ImportError as e:
+    print(f"Could not import pipeline functions from PipeLine. Error: {e}")
+    sys.exit(1)
 
 def load_flsea_yaml(yaml_path):
     """Loads FLSea Stereo camera parameters from OpenCV YAML."""

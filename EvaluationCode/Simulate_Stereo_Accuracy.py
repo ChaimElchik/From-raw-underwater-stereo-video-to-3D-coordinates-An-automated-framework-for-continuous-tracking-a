@@ -9,19 +9,16 @@ import sys
 import os
 
 # --- Import Pipeline Functions ---
-sys.path.append(os.path.dirname(os.path.abspath(__file__)) + "/Final_Pipeline_Code")
-# Attempt imports (assuming script is in root or adjacent)
+import sys
+import os
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'PipeLine'))
 try:
-    from Final_Pipeline_Code.ThreeDCordinate_Maker import refract_points, triangulate_rays
-except ImportError:
-    # If running from inside Final_Pipeline_Code
-    try:
-        from ThreeDCordinate_Maker import refract_points, triangulate_rays
-    except ImportError:
-        print("Could not import pipeline functions. Check paths.")
-        sys.exit(1)
+    from ThreeDCordinate_Maker import refract_points, triangulate_rays
+except ImportError as e:
+    print(f"Could not import pipeline functions from PipeLine. Error: {e}")
+    sys.exit(1)
 
-GAME_MAT = "stereoParams_Dep4.mat"
+GAME_MAT = "../Final_Pipeline_Code/stereo_parameters/stereoParams_Dep4.mat"
 
 def load_camera_params(mat_file):
     if not os.path.exists(mat_file):
@@ -132,7 +129,8 @@ def forward_project_refracted(point_3d, K, D, n_air=1.0, n_glass=1.5, n_water=1.
 
 calculate_final_err = True
 
-def run_simulation(N=2, glass_d=50.0, glass_th=10.0):
+def run_simulation(N=1000, glass_d=50.0, glass_th=10.0):
+    np.random.seed(42)  # For reproducible output
     print(f"--- Running Simulation (N={N} points) ---", flush=True)
     print(f"Params: d_air={glass_d}mm, d_glass={glass_th}mm", flush=True)
     
@@ -251,15 +249,15 @@ def run_simulation(N=2, glass_d=50.0, glass_th=10.0):
         errors_pinhole.append(err_a)
         errors_rayray.append(err_b)
         
-    rmse_a = np.sqrt(np.mean(np.square(errors_pinhole)))
-    rmse_b = np.sqrt(np.mean(np.square(errors_rayray)))
+    mae_a = np.mean(errors_pinhole)
+    max_a = np.max(errors_pinhole)
+    mae_b = np.mean(errors_rayray)
+    max_b = np.max(errors_rayray)
     
+    # We output MAE and MAX as requested by the table
     print(f"\nRESULTS (N={len(errors_pinhole)} valid points):")
-    print(f"Method A (Pinhole/Old): RMSE = {rmse_a:.2f} mm")
-    print(f"Method B (Ray-Ray/New): RMSE = {rmse_b:.2f} mm")
-    
-    improvement = rmse_a - rmse_b
-    print(f"Improvement: {improvement:.2f} mm")
+    print(f"Calibrated Pinhole (Underwater) MAE: {mae_a:.6f} mm | Max: {max_a:.6f} mm")
+    print(f"Proposed Refractive Triangulation MAE: {mae_b:.6f} mm | Max: {max_b:.6f} mm")
     
     # Save to CSV for plotting if needed
     df = pd.DataFrame({

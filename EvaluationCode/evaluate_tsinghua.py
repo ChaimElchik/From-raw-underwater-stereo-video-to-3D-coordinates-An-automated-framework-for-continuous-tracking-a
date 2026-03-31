@@ -47,7 +47,7 @@ def get_node(filepath, node_name):
     fs.release()
     return val
 
-calib_dir = '/Users/chaim/Documents/Thesis_ReWrite/underwater-datasets-main/calib_result/'
+calib_dir = '/Users/chaim/Documents/Thesis_ReWrite/EvaluationCode/underwater-datasets-main/calib_result/'
 K1 = get_node(calib_dir + 'matlab_cameraMatrixL.xml', 'matlab_cameraMatrixL')
 K2 = get_node(calib_dir + 'matlab_cameraMatrixR.xml', 'matlab_cameraMatrixR')
 D1 = get_node(calib_dir + 'matlab_distCoeffL.xml', 'matlab_distCoeffL')
@@ -58,61 +58,19 @@ T_stereo = get_node(calib_dir + 'matlab_T.xml', 'matlab_T').flatten()
 P1_pinhole = K1 @ np.hstack((np.eye(3), np.zeros((3,1))))
 P2_pinhole = K2 @ np.hstack((R_stereo, T_stereo.reshape(3,1)))
 
-# Refraction math
-def refract_points(pts_pixel, K, D, d_air=10.0, d_glass=10.0):
-    pts_norm = cv2.undistortPoints(np.expand_dims(pts_pixel, 1), K, D).squeeze(1)
-    if pts_norm.ndim == 1: pts_norm = np.expand_dims(pts_norm, 0)
-    rays_air = np.column_stack((pts_norm, np.ones(len(pts_norm))))
-    rays_air /= np.linalg.norm(rays_air, axis=1, keepdims=True)
-    
-    r_air = np.linalg.norm(pts_norm, axis=1) 
-    mask = r_air > 1e-8
-    
-    rays_water = rays_air.copy()
-    origins_water = np.zeros_like(rays_air)
-    
-    theta_air = np.arctan(r_air[mask])
-    n_air, n_water, n_glass = 1.0, 1.333, 1.49
-    sin_tw = (n_air / n_water) * np.sin(theta_air)
-    valid = np.abs(sin_tw) <= 1.0
-    tw = np.arcsin(sin_tw[valid])
-    
-    sin_tg = (n_air / n_glass) * np.sin(theta_air[valid])
-    tg = np.arcsin(sin_tg)
-    
-    r_exit = d_air * np.tan(theta_air[valid]) + d_glass * np.tan(tg)
-    z_exit = d_air + d_glass
-    
-    u_r = pts_norm[mask][valid] / r_air[mask][valid][:, None]
-    ox = r_exit[:, None] * u_r
-    oz = np.full((len(ox), 1), z_exit)
-    
-    origins_water[mask] = np.hstack((ox, oz))
-    
-    vz = np.cos(tw)
-    vr = np.sin(tw)
-    vx = vr[:, None] * u_r
-    rays_water[mask] = np.hstack((vx, vz[:, None]))
-    
-    return origins_water, rays_water
-
-def triangulate_rays(O1, D1, O2, D2):
-    w0 = O1 - O2
-    b = np.sum(D1 * D2, axis=1)
-    d = np.sum(D1 * w0, axis=1)
-    e = np.sum(D2 * w0, axis=1)
-    denom = 1.0 - b*b
-    denom[np.abs(denom) < 1e-6] = 1e-6
-    t1 = (b*e - d) / denom
-    t2 = (e - b*d) / denom 
-    P1 = O1 + t1[:, None] * D1
-    P2 = O2 + t2[:, None] * D2
-    return (P1 + P2) / 2.0
+# Use Pipeline logic
+import sys
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'PipeLine'))
+try:
+    from ThreeDCordinate_Maker import refract_points, triangulate_rays
+except ImportError as e:
+    print(f"Could not import pipeline functions from PipeLine. Error: {e}")
+    sys.exit(1)
 
 sift = cv2.SIFT_create()
 bf = cv2.BFMatcher()
 
-mesh_dir = '/Users/chaim/Documents/Thesis_ReWrite/underwater-datasets-main/mesh/'
+mesh_dir = '/Users/chaim/Documents/Thesis_ReWrite/EvaluationCode/underwater-datasets-main/mesh/'
 img_pairs = [
     ('fish1', '1.bmp'),
     ('shell', '2.bmp'),
@@ -130,8 +88,8 @@ print(f"{'Object':<10} | {'Matches':<8} | {'Pinhole RMSE':<15} | {'Refraction RM
 print("-" * 55)
 
 for mesh_name, img_name in img_pairs:
-    l_path = f'/Users/chaim/Documents/Thesis_ReWrite/underwater-datasets-main/image/left/{img_name}'
-    r_path = f'/Users/chaim/Documents/Thesis_ReWrite/underwater-datasets-main/image/right/{img_name}'
+    l_path = f'/Users/chaim/Documents/Thesis_ReWrite/EvaluationCode/underwater-datasets-main/image/left/{img_name}'
+    r_path = f'/Users/chaim/Documents/Thesis_ReWrite/EvaluationCode/underwater-datasets-main/image/right/{img_name}'
     mesh_path = f'{mesh_dir}{mesh_name}.ply'
     
     imgL = cv2.imread(l_path, cv2.IMREAD_GRAYSCALE)
@@ -162,8 +120,8 @@ for mesh_name, img_name in img_pairs:
     pts2_r = pts2[valid_mask]
     
     # 2. Refractive Triangulation
-    O1, D1_vec = refract_points(pts1_r, K1, D1, d_air, d_glass)
-    O2, D2_vec = refract_points(pts2_r, K2, D2, d_air, d_glass)
+    O1, D1_vec = refract_points(pts1_r, K1, D1, d_air=d_air, d_glass=d_glass, correct_refraction=True, n_glass=1.49)
+    O2, D2_vec = refract_points(pts2_r, K2, D2, d_air=d_air, d_glass=d_glass, correct_refraction=True, n_glass=1.49)
     O2_global = (O2 - T_stereo) @ R_stereo
     D2_global = D2_vec @ R_stereo
     pts3D_refract = triangulate_rays(O1, D1_vec, O2_global, D2_global)
