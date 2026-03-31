@@ -214,13 +214,13 @@ def cor_maker_3d(df1_path, df2_path, camera_data_file, n_water=1.333, n_glass=1.
     K2, D2 = mat['intrinsicMatrix2'], mat['distortionCoefficients2']
     R, t = mat['rotationOfCamera2'], mat['translationOfCamera2'].flatten()
     
-    # Project Matrices (Standard Pinhole)
+    # Project Matrices (Normalized Space)
     P1 = np.hstack((np.eye(3), np.zeros((3, 1))))
-    P1 = K1 @ P1
+    # Removed K1 multiplication since triangulatePoints receives normalized points!
     
-    # P2 = K2 [R|t]
-    P2_ext = np.hstack((R, t.reshape(3, 1)))
-    P2 = K2 @ P2_ext
+    # P2 = [R|t]
+    P2 = np.hstack((R, t.reshape(3, 1)))
+    # Removed K2 multiplication
     
     # 6. Process
     frames = merged['frame'].unique()
