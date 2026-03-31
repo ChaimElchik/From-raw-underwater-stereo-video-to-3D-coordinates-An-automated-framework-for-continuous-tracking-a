@@ -8,17 +8,15 @@ A robust, high-precision 3D tracking framework designed to analyze fish behavior
 - **Advanced Visual Re-ID**: A custom Vision Transformer (ViT) module that "heals" fragmented tracks by extracting visual embeddings and intelligently matching broken tracklets across time, factoring in temporal and kinematic constraints.
 - **Refractive Stereo Matching**: Epipolar geometric matching module that handles complex **Air-Glass-Water** refractive interfaces, drastically improving 3D mapping accuracy over standard pinhole camera assumption.
 - **3D Triangulation**: Computes metric 3D coordinates (X, Y, Z) from matched 2D stereo trajectories.
-- **Behavioral Analysis (InsightsGen)**: Automatically generates statistical insights and graphs summarizing fish kinematics (speed, acceleration), spatial distribution, depth analysis, and key movement changes.
 - **Visualization**: Generates custom annotated overlay videos natively.
 
 ## Implementation Overview
 
-The main execution sequence is handled by `Run_PipeLine.py`, divided into 5 clear steps:
+The main execution sequence is handled by `Run_PipeLine.py`, divided into 4 clear steps:
 1. **Detection & Tracking** (`ProcessVideoPair.py` and `AdvancedReID.py`): Performs YOLO detection followed by tracking and Re-ID to generate temporally consistent 2D IDs.
 2. **Refractive Epipolar Matching** (`StereoMatching.py`): Matches tracks between the left and right cameras using epipolar geometry and refractive correction.
 3. **3D Triangulation** (`ThreeDCordinate_Maker.py`): Reconstructs 3D real-world coordinates from stereo matching results.
-4. **Behavioral Insights** (`InsightsGen.py`): Evaluates metric 3D data to generate behavioral graphs and kinematic statistics.
-5. **Visualization Overlay** (`OutPutVideoGenerater.py`): Annotates original video files with final tracking data.
+4. **Visualization Overlay** (`OutPutVideoGenerater.py`): Annotates original video files with final tracking data.
 
 ## Installation
 
@@ -59,5 +57,4 @@ python Run_PipeLine.py --vid1 path/to/cam1.mp4 \
 Running the pipeline will automatically generate the following sub-directories inside your chosen `--output` folder:
 
 - `/mots/`: Contains intermediate and final coordinate mappings (`cam1_raw.csv`, `cam2_mapped.csv`, `3d_trajectory.csv`).
-- `/analysis/`: Contains the generated graphs for heatmaps, 3D path lengths, temporal movement, and acceleration.
 - `/videos/`: Contains the final rendered `.mp4` video files with IDs and bounding boxes overlaid on the footage.
