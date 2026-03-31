@@ -1,0 +1,21 @@
+tracker_type: botsort
+track_high_thresh: 0.20
+track_low_thresh: 0.05
+new_track_thresh: 0.75
+track_buffer: 90
+match_thresh: 0.85
+fuse_score: True
+proximity_thresh: 0.5
+appearance_thresh: 0.25
+
+# Fixed: Ensure these are set to avoid initialization errors
+gmc: False
+gmc_method: sparseOptFlow
+with_reid: True
+fast_reid: True
+model: "auto" # <--- THIS IS LIKELY THE MISSING KEY CAUSING THE CRASH
+
+# Custom extensions (kept as requested)
+size_ratio_thresh: 0.8
+iou_thresh: 0.5
+ablation: False
