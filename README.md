@@ -39,7 +39,10 @@ python Run_PipeLine.py --vid1 path/to/cam1.mp4 \
                        --vid2 path/to/cam2.mp4 \
                        --calib path/to/stereoParams.mat \
                        --model yolov8n.pt \
-                       --output ./results
+                       --output ./results \
+                       --correct_refraction \
+                       --d_air 0.0 \
+                       --d_glass 5.0
 ```
 
 ### Arguments
@@ -50,7 +53,10 @@ python Run_PipeLine.py --vid1 path/to/cam1.mp4 \
 | `--vid2` | **(Required)** Path to the Right Camera Video. | |
 | `--calib` | **(Required)** Path to the Stereo Parameters `.mat` file. | |
 | `--model` | Path to the YOLO weights to use for detection. | `yolov8n.pt` |
-| `--output` | Root directory to store all outputs (stats, graphs, videos). | `./results` |
+| `--output` | Root directory to store all outputs. | `./results` |
+| `--correct_refraction` | Enable refraction correction for 3D coordinate generation. Use this if your system was calibrated in air but records in water. | `False` |
+| `--d_air` | Distance from camera origin to the glass flat port (mm). Only used if `--correct_refraction` is set. | `0.0` |
+| `--d_glass` | Thickness of the glass flat port (mm). Only used if `--correct_refraction` is set. | `0.0` |
 
 ## Outputs Structure
 
