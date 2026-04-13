@@ -8,7 +8,7 @@ import torch
 from tqdm import tqdm
 
 # Import the superior Re-ID pipeline from your AdvancedReID script
-from AdvancedReID import process_reid_pipeline
+from AdvancedReIDV2 import process_reid_pipeline
 
 # --- MAIN TRACKING FUNCTIONS ---
 
