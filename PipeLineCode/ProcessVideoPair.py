@@ -26,6 +26,8 @@ def process_single_video(video_path, output_path, model, conf_thresh, device):
         print(f"[Error] Video file not found: {video_path}")
         return False
 
+    # Force tracker reset by using a completely fresh YOLO model per video (handled in process_dual_videos)
+
     print(f"--> Processing: {video_path}")
 
     # Tracker Config
@@ -122,10 +124,22 @@ def process_dual_videos(vid1_path, vid2_path, out1_path, out2_path, model_path, 
     print("Model loaded. Starting batch processing...")
     print("="*60)
     print("CAMERA 1 SEQUENCE")
-    process_single_video(vid1_path, out1_path, model, conf, device)
+    try:
+        model1 = YOLO(model_path)
+    except Exception as e:
+        print(f"Critical Error loading model: {e}")
+        return
+    process_single_video(vid1_path, out1_path, model1, conf, device)
+    
     print("-" * 40)
     print("CAMERA 2 SEQUENCE")
-    process_single_video(vid2_path, out2_path, model, conf, device)
+    # Fresh model initialization effectively resets the tracker's internal cache
+    try:
+        model2 = YOLO(model_path)
+    except Exception as e:
+        print(f"Critical Error loading model: {e}")
+        return
+    process_single_video(vid2_path, out2_path, model2, conf, device)
     print("="*60)
     print("Done! Both videos processed.")
 
